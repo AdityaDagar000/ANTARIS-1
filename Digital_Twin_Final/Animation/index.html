@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bharti Research Station — Digital Twin</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <!-- 3D Canvas Container -->
+  <div id="app"></div>
+
+  <!-- UI Overlay -->
+  <div id="ui-container">
+    <aside id="asset-navigator" class="asset-navigator">
+      <div class="navigator-heading">FACILITY MONITORING ASSETS</div>
+
+      <!-- Section 1: CHP Generation Room (18 assets) -->
+      <details open class="asset-section" data-section="chp"><summary>1. CHP Room <span>18</span></summary><div class="asset-list">
+        <div class="asset-unit-label">CHP UNIT 1</div>
+        <button data-asset="EngineCore">Unit 1 · Engine Core</button>
+        <button data-asset="BearingSystem">Unit 1 · Bearing System</button>
+        <button data-asset="LubricationSystem">Unit 1 · Lubrication System</button>
+        <button data-asset="CoolingSystem">Unit 1 · Cooling System</button>
+        <button data-asset="GeneratorSystem">Unit 1 · Generator System</button>
+        <button data-asset="FuelSystem">Unit 1 · Fuel System</button>
+
+        <div class="asset-unit-label">CHP UNIT 2</div>
+        <button data-asset="EngineCore1">Unit 2 · Engine Core</button>
+        <button data-asset="BearingSystem1">Unit 2 · Bearing System</button>
+        <button data-asset="LubricationSystem1">Unit 2 · Lubrication System</button>
+        <button data-asset="CoolingSystem1">Unit 2 · Cooling System</button>
+        <button data-asset="GeneratorSystem1">Unit 2 · Generator System</button>
+        <button data-asset="FuelSystem1">Unit 2 · Fuel System</button>
+
+        <div class="asset-unit-label">CHP UNIT 3</div>
+        <button data-asset="EngineCore2">Unit 3 · Engine Core</button>
+        <button data-asset="BearingSystem2">Unit 3 · Bearing System</button>
+        <button data-asset="LubricationSystem2">Unit 3 · Lubrication System</button>
+        <button data-asset="CoolingSystem2">Unit 3 · Cooling System</button>
+        <button data-asset="GeneratorSystem2">Unit 3 · Generator System</button>
+        <button data-asset="FuelSystem2">Unit 3 · Fuel System</button>
+      </div></details>
+
+      <!-- Section 2: Water Management (7 assets) -->
+      <details open class="asset-section" data-section="water"><summary>2. Water Management <span>07</span></summary><div class="asset-list">
+        <div class="asset-unit-label">FRESHWATER LAKE PUMP</div>
+        <button data-asset="WaterPump">Lake Intake Pump</button>
+        <button data-asset="ElectricMotor">Pump Drive Motor</button>
+        <button data-asset="FlexibleCoupling">Shaft Bearing / Coupling</button>
+
+        <div class="asset-unit-label">RO FILTRATION SYSTEM</div>
+        <button data-asset="HighPressureFeedPump">RO High-Pressure Pump</button>
+        <button data-asset="ROMembraneBank">RO Membrane Bank</button>
+        <button data-asset="PreFilterBank">Cartridge Pre-Filter</button>
+        <button data-asset="FeedSuctionPiping">RO Valve &amp; Piping Network</button>
+      </div></details>
+
+      <!-- Section 3: Sewage Management (3 assets) -->
+      <details open class="asset-section" data-section="sewage"><summary>3. Sewage Management <span>03</span></summary><div class="asset-list">
+        <div class="asset-unit-label">WASTEWATER RECYCLING</div>
+        <button data-asset="ProcessDischargeLoop">Process Discharge Pump</button>
+        <button data-asset="RejectConcentrateLoop">Reject Concentrate Filter</button>
+        <button data-asset="InstrumentationDrainNetwork">Drain &amp; Valve Network</button>
+      </div></details>
+
+      <!-- Section 4: Data & Telecom Centre (4 assets) -->
+      <details open class="asset-section" data-section="telecom"><summary>4. Data &amp; Telecom Centre <span>04</span></summary><div class="asset-list">
+        <div class="asset-unit-label">MECHANICAL DRIVES</div>
+        <button data-asset="AzimuthDrive">Azimuth Drive</button>
+        <button data-asset="ElevationDrive">Elevation Drive</button>
+        <button data-asset="Gearbox">Planetary Gearbox</button>
+        <button data-asset="DriveMotor">Drive Motor</button>
+      </div></details>
+    </aside>
+
+    <header class="hud-header">
+      <div class="hud-title-row">
+        <div class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="hud-branding">
+          <h1 class="hud-title">Bharti Research Station</h1>
+          <span class="hud-geo-tag">ANTARCTICA · 69°24′S 76°11′E · DIGITAL TWIN</span>
+        </div>
+        <div id="system-health-badge" class="system-health-badge">
+          <span id="system-health-dot" class="system-health-dot"></span>
+          <span id="system-health-text" class="system-health-text">SYSTEM HEALTH 100% &bull; NORMAL</span>
+        </div>
+      </div>
+      <p class="hud-instruction">Hover monitored equipment &bull; Click or press A to expand in 3D &bull; ESC to reset</p>
+    </header>
+
+    <!-- Top Right Controls: Quality & Debug Toggle -->
+    <div class="hud-top-right-tools">
+      <button id="component-status-btn" class="component-status-btn" title="Inspect Failed Components (Red Gradient Anomaly)">
+        <span class="status-btn-dot"></span>
+        <span id="component-status-btn-text">COMPONENT STATUS</span>
+      </button>
+      <div class="quality-selector" aria-label="Visual Quality Presets">
+        <span class="tool-label">QUALITY</span>
+        <button class="quality-btn active" data-quality="HIGH">HIGH</button>
+        <button class="quality-btn" data-quality="MED">MED</button>
+        <button class="quality-btn" data-quality="LOW">LOW</button>
+      </div>
+      <button id="debug-toggle-btn" class="tool-icon-btn" title="Toggle Developer Diagnostics (~)">DEBUG</button>
+    </div>
+
+    <!-- Developer Diagnostics HUD -->
+    <div id="debug-hud" class="debug-hud hidden">
+      <div class="debug-header">DIAGNOSTIC METRICS</div>
+      <div class="debug-row"><span>FPS:</span><strong id="dbg-fps">60</strong></div>
+      <div class="debug-row"><span>Draw Calls:</span><strong id="dbg-draw-calls">0</strong></div>
+      <div class="debug-row"><span>Triangles:</span><strong id="dbg-triangles">0</strong></div>
+      <div class="debug-row"><span>Monitored Assets:</span><strong id="dbg-interactive-objs">32</strong></div>
+      <div class="debug-row"><span>Selected:</span><strong id="dbg-selected">None</strong></div>
+      <div class="debug-row"><span>Subsystem:</span><strong id="dbg-subsystem">All Systems</strong></div>
+    </div>
+
+    <div id="selection-chip" class="selection-chip">
+      <span class="selection-pulse"></span>
+      <span id="selection-text">BHARTI RESEARCH STATION · DIGITAL TWIN READY</span>
+    </div>
+
+    <!-- Smooth Cursor-Following Tooltip for Monitored Assets -->
+    <div id="hover-label" class="hover-label hidden">
+      <span class="hover-label-kicker">MONITORED ASSET</span>
+      <strong id="hover-label-title">COMPONENT</strong>
+      <span id="hover-label-state">CLICK TO INSPECT</span>
+    </div>
+
+    <!-- Component Info Panel (Real ML Telemetry: 5 Exact Fields Only) -->
+    <div id="sensor-panel" class="sensor-panel hidden">
+      <div class="sensor-header">
+        <h2 id="sensor-title">EQUIPMENT NAME</h2>
+        <span id="sensor-subtitle" class="sensor-subtitle">Subsystem</span>
+      </div>
+
+      <div class="component-info-grid">
+        <div class="info-row">
+          <span class="info-label">COMPONENT ID</span>
+          <strong id="component-id-val" class="info-value font-mono">C001</strong>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">CURRENT STATE</span>
+          <span class="info-badge">
+            <span id="state-badge-dot" class="status-dot"></span>
+            <strong id="condition-state-val" class="info-value font-mono">NORMAL</strong>
+          </span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">RUL</span>
+          <strong id="rul-val" class="info-value font-mono">55 Days</strong>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">SENSOR FAILURE</span>
+          <span class="info-badge">
+            <span id="sensor-status-dot" class="status-dot"></span>
+            <strong id="sensor-failure-val" class="info-value font-mono">NO</strong>
+          </span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">CURRENT SENSOR</span>
+          <strong id="current-sensor-val" class="info-value font-mono">PRIMARY</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="mode-key" aria-label="Inspection legend">
+      <span><i class="key-dot key-live"></i> 3D METALLIC ASSET</span>
+      <span><i class="key-dot key-blueprint"></i> BLUEPRINT CONTEXT</span>
+      <kbd>ESC</kbd><em>reset</em>
+      <kbd>~</kbd><em>diagnostics</em>
+    </div>
+    <div id="controller-hint" class="controller-hint" aria-live="polite">CONTROLLER: connect to begin</div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="overlay">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <h2 id="loading-title">BHARTI RESEARCH STATION</h2>
+      <p class="loading-sub">INITIALIZING CINEMATIC DIGITAL TWIN</p>
+      <p id="loading-status">Loading facility geometry...</p>
+      <div class="progress-bar-container">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Overlay -->
+  <div id="error-overlay" class="overlay hidden">
+    <div class="error-box">
+      <h2>Digital Twin Initialization Error</h2>
+      <p id="error-message">An error occurred while loading the facility 3D model.</p>
+      <p class="error-hint">Check browser console for detailed diagnostic logs.</p>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
