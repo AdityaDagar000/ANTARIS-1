@@ -1,0 +1,44 @@
+[
+  {
+    "id": "POL-001",
+    "name": "Antarctic Environmental Protection Protocol",
+    "category": "Environmental",
+    "version": "3.1",
+    "effectiveDate": "2024-01-15",
+    "status": "Active",
+    "owner": "Environmental Compliance Board",
+    "purpose": "Ensure all station operations comply with Antarctic Treaty environmental protocols",
+    "scope": "All waste disposal, fuel handling, and emissions monitoring",
+    "requirements": ["Zero discharge policy", "Fuel spill containment", "Waste segregation"],
+    "lastReviewed": "2025-11-01",
+    "nextReview": "2026-11-01"
+  },
+  {
+    "id": "POL-002",
+    "name": "Critical Systems Redundancy Policy",
+    "category": "Safety",
+    "version": "2.4",
+    "effectiveDate": "2023-06-01",
+    "status": "Active",
+    "owner": "Station Safety Committee",
+    "purpose": "Maintain minimum redundancy for life support and power systems",
+    "scope": "Life support, power generation, water treatment, communications",
+    "requirements": ["N+1 redundancy for critical systems", "72-hour backup fuel reserve", "Dual communication paths"],
+    "lastReviewed": "2025-09-15",
+    "nextReview": "2026-09-15"
+  },
+  {
+    "id": "POL-003",
+    "name": "Automated Maintenance Authorization",
+    "category": "Maintenance",
+    "version": "1.0",
+    "effectiveDate": "2026-01-01",
+    "status": "Active",
+    "owner": "Operations Engineering",
+    "purpose": "Define which maintenance actions may be automated vs require human intervention",
+    "scope": "All ML-triggered maintenance automation",
+    "requirements": ["WHITELIST actions may auto-execute", "GREYLIST requires priority evaluation", "BLACKLIST always requires personnel"],
+    "lastReviewed": "2026-01-01",
+    "nextReview": "2027-01-01"
+  }
+]

@@ -1,0 +1,123 @@
+[
+  {
+    "id": "SOP-ENG-001",
+    "name": "Engine Degradation Response",
+    "componentType": "Engine",
+    "category": "Power Generation",
+    "purpose": "Respond to engine degradation detected by ML RUL model",
+    "prerequisites": ["Isolate affected CHP unit", "Verify backup power availability"],
+    "steps": [
+      { "order": 1, "description": "Review ML prediction and sensor status" },
+      { "order": 2, "description": "Reduce engine load to 70% capacity" },
+      { "order": 3, "description": "Schedule lubrication system inspection" },
+      { "order": 4, "description": "Monitor RUL trend for 24 hours" }
+    ],
+    "warnings": ["Do not operate engine above 80% load during degradation"],
+    "owner": "Station Engineering",
+    "version": "1.2",
+    "status": "Active",
+    "automationPolicy": "GREYLIST",
+    "allowedActions": ["reduce_load", "schedule_inspection"],
+    "requiredSkills": ["Engine", "Lubrication"]
+  },
+  {
+    "id": "SOP-BRG-001",
+    "name": "Bearing Replacement Procedure",
+    "componentType": "Bearing",
+    "category": "Mechanical",
+    "purpose": "Replace degraded bearing assembly on rotating equipment",
+    "prerequisites": ["Lock out / tag out equipment", "Gather replacement bearing kit"],
+    "steps": [
+      { "order": 1, "description": "Shut down and isolate equipment" },
+      { "order": 2, "description": "Remove bearing housing cover" },
+      { "order": 3, "description": "Extract worn bearing and inspect shaft" },
+      { "order": 4, "description": "Install new bearing with specified torque" },
+      { "order": 5, "description": "Perform vibration test before return to service" }
+    ],
+    "warnings": ["Bearing replacement requires physical access — never automate"],
+    "owner": "Mechanical Maintenance",
+    "version": "2.0",
+    "status": "Active",
+    "automationPolicy": "BLACKLIST",
+    "requiredSkills": ["Bearing", "Motor", "Pump"]
+  },
+  {
+    "id": "SOP-COOL-001",
+    "name": "Cooling System Load Reduction",
+    "componentType": "Cooling",
+    "category": "HVAC",
+    "purpose": "Automated cooling load reduction when degradation detected",
+    "prerequisites": ["Verify ambient temperature readings"],
+    "steps": [
+      { "order": 1, "description": "Reduce cooling setpoint by 2°C" },
+      { "order": 2, "description": "Enable economizer mode if available" },
+      { "order": 3, "description": "Log action and monitor recovery" }
+    ],
+    "warnings": ["Maintain minimum habitat temperature of 18°C"],
+    "owner": "HVAC Operations",
+    "version": "1.0",
+    "status": "Active",
+    "automationPolicy": "WHITELIST",
+    "allowedActions": ["reduce_cooling_load", "enable_economizer"],
+    "requiredSkills": ["Cooling", "Heating"]
+  },
+  {
+    "id": "SOP-PUMP-001",
+    "name": "Pump Flow Rate Adjustment",
+    "componentType": "Pump",
+    "category": "Water Systems",
+    "purpose": "Adjust pump operating parameters during early failure prediction",
+    "prerequisites": ["Confirm downstream pressure within limits"],
+    "steps": [
+      { "order": 1, "description": "Reduce pump speed to 85%" },
+      { "order": 2, "description": "Monitor flow rate for 30 minutes" },
+      { "order": 3, "description": "Escalate if flow drops below minimum" }
+    ],
+    "warnings": ["Critical water systems must maintain minimum flow"],
+    "owner": "Water Systems",
+    "version": "1.1",
+    "status": "Active",
+    "automationPolicy": "GREYLIST",
+    "allowedActions": ["reduce_pump_speed"],
+    "requiredSkills": ["Pump", "Valve"]
+  },
+  {
+    "id": "SOP-FLT-001",
+    "name": "Filter Replacement",
+    "componentType": "Filter",
+    "category": "Water Treatment",
+    "purpose": "Replace clogged or degraded filtration media",
+    "prerequisites": ["Bypass valve operational", "Replacement filter on hand"],
+    "steps": [
+      { "order": 1, "description": "Switch to bypass mode" },
+      { "order": 2, "description": "Remove and replace filter cartridge" },
+      { "order": 3, "description": "Flush system and return to normal operation" }
+    ],
+    "warnings": ["Physical filter replacement required"],
+    "owner": "Water Systems",
+    "version": "1.0",
+    "status": "Active",
+    "automationPolicy": "BLACKLIST",
+    "requiredSkills": ["Filter", "Membrane", "Pump"]
+  },
+  {
+    "id": "SOP-GEN-001",
+    "name": "Generator Load Balancing",
+    "componentType": "Generator",
+    "category": "Power Generation",
+    "purpose": "Automated load redistribution when generator degradation detected",
+    "prerequisites": ["Verify alternate generator availability"],
+    "steps": [
+      { "order": 1, "description": "Transfer 30% load to backup generator" },
+      { "order": 2, "description": "Reduce affected generator to standby mode" },
+      { "order": 3, "description": "Monitor power quality metrics" }
+    ],
+    "warnings": ["Ensure critical loads remain powered during transfer"],
+    "owner": "Electrical Engineering",
+    "version": "1.3",
+    "status": "Active",
+    "automationPolicy": "WHITELIST",
+    "allowedActions": ["transfer_load", "reduce_generator_output"],
+    "requiredSkills": ["Generator", "Power Supply"]
+  }
+]

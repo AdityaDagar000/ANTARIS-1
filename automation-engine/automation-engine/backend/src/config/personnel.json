@@ -1,0 +1,62 @@
+[
+  {
+    "id": "PER-001",
+    "name": "Dr. Ananya Sharma",
+    "role": "Station Engineer",
+    "skills": ["Engine", "Generator", "Fuel", "Bearing", "Lubrication"],
+    "availability": "Available",
+    "currentWorkload": 0,
+    "activeAssignments": 0,
+    "shift": "Day"
+  },
+  {
+    "id": "PER-002",
+    "name": "Rajesh Kumar",
+    "role": "Mechanical Technician",
+    "skills": ["Pump", "Motor", "Bearing", "Cooling", "Valve"],
+    "availability": "Available",
+    "currentWorkload": 0,
+    "activeAssignments": 0,
+    "shift": "Day"
+  },
+  {
+    "id": "PER-003",
+    "name": "Elena Petrova",
+    "role": "Water Systems Specialist",
+    "skills": ["Pump", "Filter", "Membrane", "Valve", "Water"],
+    "availability": "Available",
+    "currentWorkload": 0,
+    "activeAssignments": 0,
+    "shift": "Day"
+  },
+  {
+    "id": "PER-004",
+    "name": "James Okafor",
+    "role": "Electrical Engineer",
+    "skills": ["Generator", "Power Supply", "Motor", "Drive", "Gearbox"],
+    "availability": "Available",
+    "currentWorkload": 0,
+    "activeAssignments": 0,
+    "shift": "Night"
+  },
+  {
+    "id": "PER-005",
+    "name": "Sofia Lindström",
+    "role": "HVAC Technician",
+    "skills": ["Cooling", "Heating", "Engine", "Lubrication"],
+    "availability": "On Assignment",
+    "currentWorkload": 1,
+    "activeAssignments": 1,
+    "shift": "Day"
+  },
+  {
+    "id": "PER-006",
+    "name": "Mark Vance",
+    "role": "Operations Lead",
+    "skills": ["Engine", "Generator", "Communications", "Storage", "General Maintenance"],
+    "availability": "Available",
+    "currentWorkload": 0,
+    "activeAssignments": 0,
+    "shift": "Day"
+  }
+]
