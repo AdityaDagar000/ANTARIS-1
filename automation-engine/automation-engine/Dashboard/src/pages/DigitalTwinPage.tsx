@@ -52,17 +52,22 @@ export const DigitalTwinPage: React.FC = () => {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     container.appendChild(renderer.domElement);
 
-    // Quality Settings
+    const QUALITY_LEVELS = ['HIGH', 'MED', 'LOW'] as const;
+    let currentQuality: (typeof QUALITY_LEVELS)[number] = 'HIGH';
+
     const applyQualitySettings = (quality: string) => {
-      if (quality === 'HIGH') {
+      currentQuality = (QUALITY_LEVELS.includes(quality as (typeof QUALITY_LEVELS)[number])
+        ? quality
+        : 'HIGH') as (typeof QUALITY_LEVELS)[number];
+      if (currentQuality === 'HIGH') {
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-      } else if (quality === 'MED') {
+      } else if (currentQuality === 'MED') {
         renderer.setPixelRatio(1.0);
       } else {
         renderer.setPixelRatio(0.85);
       }
       uiContainerRef.current?.querySelectorAll('.quality-btn').forEach((b) => {
-        b.classList.toggle('active', (b as HTMLElement).dataset.quality === quality);
+        b.classList.toggle('active', (b as HTMLElement).dataset.quality === currentQuality);
       });
     };
 
@@ -79,6 +84,7 @@ export const DigitalTwinPage: React.FC = () => {
     controls.maxPolarAngle = Math.PI / 2 - 0.02;
     controls.minDistance = 1.5;
     controls.maxDistance = 5000;
+    controls.enableDblClick = false;
 
     // 6. Lighting Setup
     const ambientLight = new THREE.AmbientLight(0x203248, 0.85);
@@ -383,6 +389,154 @@ export const DigitalTwinPage: React.FC = () => {
     let lastFpsUpdateTime = performance.now();
     let currentFps = 60;
 
+    // Gamepad / controller engine (parity with standalone Animation build)
+    const controllerHint = document.getElementById('controller-hint');
+    let controllerConnected = false;
+    let controllerNavLatch = false;
+    let controllerActionLatch = false;
+    let controllerQualityLatch = false;
+    let controllerDebugLatch = false;
+    let controllerRoomLatch = false;
+
+    const deadzone = (val: number, threshold = 0.16) => {
+      if (Math.abs(val) < threshold) return 0;
+      return Math.sign(val) * ((Math.abs(val) - threshold) / (1 - threshold));
+    };
+
+    const updateGamepad = (delta: number) => {
+      const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+      const gamepad = [...gamepads].find(Boolean);
+
+      if (!gamepad) {
+        if (controllerConnected) {
+          controllerConnected = false;
+          generatorInteractionManager?.setControllerActive(false);
+          if (controllerHint) {
+            controllerHint.textContent = 'CONTROLLER: connect to begin';
+            controllerHint.classList.remove('is-active');
+          }
+        }
+        return;
+      }
+
+      if (!controllerConnected) {
+        controllerConnected = true;
+        generatorInteractionManager?.setControllerActive(true);
+        if (controllerHint) {
+          const padId = gamepad.id || 'GAMEPAD';
+          const cleanName = padId.includes('Xbox')
+            ? 'XBOX'
+            : padId.includes('PlayStation') || padId.includes('Dual')
+              ? 'PS'
+              : 'CONTROLLER';
+          controllerHint.textContent = `${cleanName} ACTIVE · L-STICK: PAN · R-STICK: ORBIT · D-PAD: BROWSE · A: INSPECT · B: RESET`;
+          controllerHint.classList.add('is-active');
+        }
+      }
+
+      const leftX = deadzone(gamepad.axes[0] || 0);
+      const leftY = deadzone(gamepad.axes[1] || 0);
+      if (leftX || leftY) {
+        const forward = new THREE.Vector3()
+          .subVectors(controls.target, camera.position)
+          .setY(0)
+          .normalize();
+        const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+        const targetDist = controls.target.distanceTo(camera.position);
+        const speed = Math.max(16, targetDist * 0.48) * delta;
+        controls.target.addScaledVector(right, leftX * speed).addScaledVector(forward, -leftY * speed);
+        camera.position.addScaledVector(right, leftX * speed).addScaledVector(forward, -leftY * speed);
+      }
+
+      const rightX = deadzone(gamepad.axes[2] || 0);
+      const rightY = deadzone(gamepad.axes[3] || 0);
+      const triggerLeft = gamepad.buttons[6]?.value || 0;
+      const triggerRight = gamepad.buttons[7]?.value || 0;
+      const zoomInput = triggerLeft - triggerRight;
+
+      if (rightX || rightY || zoomInput) {
+        const offset = camera.position.clone().sub(controls.target);
+        const spherical = new THREE.Spherical().setFromVector3(offset);
+        spherical.theta -= rightX * delta * 2.2;
+        spherical.phi = THREE.MathUtils.clamp(spherical.phi - rightY * delta * 1.6, 0.08, Math.PI / 2 - 0.02);
+        if (Math.abs(zoomInput) > 0.05) {
+          spherical.radius = THREE.MathUtils.clamp(
+            spherical.radius * (1 + zoomInput * delta * 2.5),
+            controls.minDistance,
+            controls.maxDistance
+          );
+        }
+        camera.position.copy(controls.target).add(new THREE.Vector3().setFromSpherical(spherical));
+      }
+
+      const dPadUp = gamepad.buttons[12]?.pressed;
+      const dPadDown = gamepad.buttons[13]?.pressed;
+      if ((dPadUp || dPadDown) && !controllerNavLatch) {
+        setAssetCursor(assetCursor + (dPadDown ? 1 : -1));
+      }
+      controllerNavLatch = Boolean(dPadUp || dPadDown);
+
+      const lb = gamepad.buttons[4]?.pressed;
+      const rb = gamepad.buttons[5]?.pressed;
+      if ((lb || rb) && !controllerRoomLatch) {
+        const roomDetails = Array.from(
+          uiContainerRef.current?.querySelectorAll('#asset-navigator details') || []
+        ) as HTMLDetailsElement[];
+        if (roomDetails.length > 0) {
+          const openIdx = roomDetails.findIndex((d) => d.open);
+          const nextIdx = (openIdx + (rb ? 1 : -1) + roomDetails.length) % roomDetails.length;
+          roomDetails.forEach((d, i) => {
+            d.open = i === nextIdx;
+          });
+          const firstBtn = roomDetails[nextIdx]?.querySelector('button[data-asset]') as HTMLElement | null;
+          if (firstBtn) {
+            const btnIdx = assetButtons.indexOf(firstBtn);
+            if (btnIdx >= 0) setAssetCursor(btnIdx);
+          }
+        }
+      }
+      controllerRoomLatch = Boolean(lb || rb);
+
+      const btnA = gamepad.buttons[0]?.pressed;
+      const btnB = gamepad.buttons[1]?.pressed || gamepad.buttons[9]?.pressed;
+      if ((btnA || btnB) && !controllerActionLatch) {
+        if (btnA) {
+          if (generatorInteractionManager?.hoveredMesh) {
+            generatorInteractionManager.selectMesh(generatorInteractionManager.hoveredMesh);
+          } else if (assetCursor >= 0 && assetButtons[assetCursor]) {
+            (assetButtons[assetCursor] as HTMLElement).click();
+          } else {
+            generatorInteractionManager?.selectCenterTarget();
+          }
+        } else {
+          generatorInteractionManager?.clearSelection();
+        }
+      }
+      controllerActionLatch = Boolean(btnA || btnB);
+
+      const btnX = gamepad.buttons[2]?.pressed;
+      if (btnX && !controllerQualityLatch) {
+        const currentIdx = QUALITY_LEVELS.indexOf(currentQuality);
+        const nextIdx = (currentIdx + 1) % QUALITY_LEVELS.length;
+        applyQualitySettings(QUALITY_LEVELS[nextIdx]);
+      }
+      controllerQualityLatch = Boolean(btnX);
+
+      const btnY = gamepad.buttons[3]?.pressed;
+      if (btnY && !controllerDebugLatch) {
+        debugModeActive = !debugModeActive;
+        const debugHud = document.getElementById('debug-hud');
+        debugHud?.classList.toggle('hidden', !debugModeActive);
+        debugBtn?.classList.toggle('active', debugModeActive);
+      }
+      controllerDebugLatch = Boolean(btnY);
+    };
+
+    const onGamepadConnected = () => {
+      updateGamepad(0);
+    };
+    window.addEventListener('gamepadconnected', onGamepadConnected);
+
     // 8. Main Render Loop
     const animate = () => {
       if (isDisposed) return;
@@ -409,6 +563,8 @@ export const DigitalTwinPage: React.FC = () => {
           }
         }
       }
+
+      updateGamepad(delta);
 
       if (generatorInteractionManager) {
         try {
@@ -447,6 +603,7 @@ export const DigitalTwinPage: React.FC = () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('digital-twin-selection', handleTwinSelection);
+      window.removeEventListener('gamepadconnected', onGamepadConnected);
 
       if (generatorInteractionManager) {
         generatorInteractionManager.dispose();
