@@ -10,6 +10,8 @@ dotenv.config({ path: rootEnv });
 dotenv.config({ path: localEnv });
 dotenv.config();
 
+const backendRoot = path.resolve(__dirname, '..');
+
 export const config = {
   port: parseInt(process.env.PORT || '4000', 10),
   mlApiUrl: process.env.ML_API_URL || 'https://digital-twin-rul-api-qm5j.onrender.com/predictions',
@@ -20,7 +22,7 @@ export const config = {
     ? (process.env.DATABASE_URL.startsWith('.')
         ? path.resolve(__dirname, '../..', process.env.DATABASE_URL)
         : process.env.DATABASE_URL)
-    : path.resolve(__dirname, '../data/antaris.json'),
+    : path.resolve(backendRoot, 'data/antaris.json'),
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  configDir: path.resolve(__dirname, 'config'),
+  configDir: path.resolve(backendRoot, 'src/config'),
 };
