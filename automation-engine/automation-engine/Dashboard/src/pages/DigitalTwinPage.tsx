@@ -84,7 +84,11 @@ export const DigitalTwinPage: React.FC = () => {
     controls.maxPolarAngle = Math.PI / 2 - 0.02;
     controls.minDistance = 1.5;
     controls.maxDistance = 5000;
-    controls.enableDblClick = false;
+    const blockDblClickZoom = (event: MouseEvent) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    };
+    renderer.domElement.addEventListener('dblclick', blockDblClickZoom, true);
 
     // 6. Lighting Setup
     const ambientLight = new THREE.AmbientLight(0x203248, 0.85);
@@ -604,6 +608,7 @@ export const DigitalTwinPage: React.FC = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('digital-twin-selection', handleTwinSelection);
       window.removeEventListener('gamepadconnected', onGamepadConnected);
+      renderer.domElement.removeEventListener('dblclick', blockDblClickZoom, true);
 
       if (generatorInteractionManager) {
         generatorInteractionManager.dispose();
