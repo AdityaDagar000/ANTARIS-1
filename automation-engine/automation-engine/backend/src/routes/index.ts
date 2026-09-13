@@ -16,6 +16,11 @@ import fs from 'fs';
 import path from 'path';
 import { config } from '../config.js';
 import type { Priority } from '../types/index.js';
+import {
+  getOperationalCriticality,
+  listAllCriticality,
+  rankOpenTickets,
+} from '../services/digitalTwin/maintenancePriorityService.js';
 import { topologyService } from '../services/digitalTwin/topologyService.js';
 
 const router = Router();
@@ -74,7 +79,47 @@ router.get('/components/faulty', (_req, res) => {
 });
 
 router.get('/tickets', (_req, res) => {
-  res.json(getAllTickets());
+  const tickets = getAllTickets();
+  const queue = rankOpenTickets(tickets);
+  const rankByComponent = new Map(queue.map((item) => [item.componentId, item]));
+
+  res.json(
+    tickets.map((ticket) => {
+      const ranking = rankByComponent.get(ticket.componentId);
+      return {
+        ...ticket,
+        maintenanceOrder: ranking?.maintenanceOrder ?? null,
+        operationalCriticality: ranking?.operationalCriticality ?? null,
+        maintenanceRationale: ranking?.rationale ?? null,
+      };
+    })
+  );
+});
+
+router.get('/maintenance/queue', (_req, res) => {
+  const tickets = getAllTickets();
+  const queue = rankOpenTickets(tickets);
+  res.json({
+    version: topologyService.getTopology().version,
+    generatedAt: new Date().toISOString(),
+    queue,
+  });
+});
+
+router.get('/maintenance/criticality', (_req, res) => {
+  res.json({
+    version: topologyService.getTopology().version,
+    components: listAllCriticality(),
+  });
+});
+
+router.get('/maintenance/criticality/:componentId', (req, res) => {
+  const criticality = getOperationalCriticality(req.params.componentId);
+  if (!criticality) {
+    res.status(404).json({ error: `No topology criticality for '${req.params.componentId}'` });
+    return;
+  }
+  res.json(criticality);
 });
 
 router.get('/tickets/:id', (req, res) => {
@@ -193,7 +238,19 @@ router.get('/digital-twin/topology/component/:id', (req, res) => {
     return;
   }
   const related = topologyService.getRelatedComponents(componentId);
-  res.json({ node, related });
+  const criticality = getOperationalCriticality(node.componentId);
+  res.json({ node, related, criticality });
+});
+
+router.get('/digital-twin/topology/cad/:cadObject', (req, res) => {
+  const node = topologyService.getNodeByCadObject(req.params.cadObject);
+  if (!node) {
+    res.status(404).json({ error: `No topology node for CAD object '${req.params.cadObject}'` });
+    return;
+  }
+  const related = topologyService.getRelatedComponents(node.componentId);
+  const criticality = getOperationalCriticality(node.componentId);
+  res.json({ node, related, criticality });
 });
 
 export default router;

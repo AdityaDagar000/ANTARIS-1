@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getStore, upsertTicket } from '../../database/db.js';
 import type { MaintenanceTicket, Priority, TicketEvent, TicketStatus } from '../../types/index.js';
+import { sortTicketsByMaintenancePriority } from '../digitalTwin/maintenancePriorityService.js';
 import { logAutomationEvent } from './eventLog.js';
 import { updatePersonnelAssignment } from './personnelAssignmentService.js';
 
@@ -235,9 +236,8 @@ export function reconcileCompletedTickets(): void {
 }
 
 export function getAllTickets(): MaintenanceTicket[] {
-  return getStore()
-    .tickets.sort((a, b) => (b.created_at as string).localeCompare(a.created_at as string))
-    .map(rowToTicket);
+  const tickets = getStore().tickets.map(rowToTicket);
+  return sortTicketsByMaintenancePriority(tickets);
 }
 
 export function getTicketById(id: string): MaintenanceTicket | undefined {

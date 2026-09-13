@@ -54,6 +54,9 @@ export interface TicketItem {
   created: string;
   faultType?: string;
   policyClass?: string;
+  maintenanceOrder?: number | null;
+  operationalCriticality?: number | null;
+  maintenanceRationale?: string | null;
   timeline?: Array<{ type: string; message: string; timestamp: string }>;
 }
 

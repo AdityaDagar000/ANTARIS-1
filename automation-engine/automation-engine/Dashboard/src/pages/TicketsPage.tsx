@@ -35,7 +35,9 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
             <Ticket className="w-5 h-5 text-cyan-400" />
             <h2 className="text-xl font-bold text-white tracking-tight">Maintenance Tickets</h2>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">Track, assign, and manage station maintenance work orders</p>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Work orders ranked by automation engine (ML health + internal dependency scoring)
+          </p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -91,6 +93,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="text-slate-400 border-b border-white/10 font-semibold uppercase tracking-wider">
+                  <th className="py-3 px-2">Rank</th>
                   <th className="py-3 px-2">Ticket ID</th>
                   <th className="py-3 px-2">Target Component</th>
                   <th className="py-3 px-2">Priority Level</th>
@@ -103,6 +106,9 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
               <tbody className="divide-y divide-white/5 text-slate-200">
                 {filteredTickets.map((t) => (
                   <tr key={t.id} className="hover:bg-white/5 transition-colors">
+                    <td className="py-3 px-2 font-mono text-slate-300" title={t.maintenanceRationale || undefined}>
+                      {t.maintenanceOrder != null ? `#${t.maintenanceOrder}` : '—'}
+                    </td>
                     <td className="py-3 px-2 font-mono font-bold text-cyan-400">{t.id}</td>
                     <td className="py-3 px-2 font-semibold text-white">{t.componentName || t.componentId}</td>
                     <td className="py-3 px-2">

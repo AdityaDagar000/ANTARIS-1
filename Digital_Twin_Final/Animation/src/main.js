@@ -112,6 +112,7 @@ controls.dampingFactor = 0.05;
 controls.maxPolarAngle = Math.PI / 2 - 0.02; // Prevent going below floor plane
 controls.minDistance = 1.5;
 controls.maxDistance = 5000;
+controls.enableDblClick = false;
 
 // 6. Cinematic Industrial Engineering Lighting Setup
 const ambientLight = new THREE.AmbientLight(0x203248, 0.85);
