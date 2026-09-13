@@ -29,6 +29,9 @@ export function mapTicketFromApi(t: Record<string, unknown>): TicketItem {
     created: formatDate(t.createdAt as string),
     faultType: t.faultType as string,
     policyClass: t.policyClass as string,
+    maintenanceOrder: (t.maintenanceOrder as number | null | undefined) ?? null,
+    operationalCriticality: (t.operationalCriticality as number | null | undefined) ?? null,
+    maintenanceRationale: (t.maintenanceRationale as string | null | undefined) ?? null,
     timeline: t.timeline as TicketItem['timeline'],
   };
 }

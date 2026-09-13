@@ -14,7 +14,10 @@ import {
   resolveTicketForImprovement,
   updateTicket,
 } from './ticketService.js';
-import { topologyService } from '../digitalTwin/topologyService.js';
+import {
+  rankPredictionsForMaintenance,
+  resolveEffectivePriority,
+} from '../digitalTwin/maintenancePriorityService.js';
 
 function persistPrediction(pred: Prediction): void {
   insertPrediction({
@@ -89,7 +92,8 @@ export class AutomationEngine {
 
     recordHealthHistory(predictions);
 
-    for (const pred of predictions) {
+    const ordered = rankPredictionsForMaintenance(predictions);
+    for (const pred of ordered) {
       await this.processPrediction(pred);
     }
   }
@@ -127,18 +131,14 @@ export class AutomationEngine {
 
     console.log(`[AUTOMATION] Processing prediction for ${pred.componentId}...`);
 
-    // Retrieve internal Digital Twin topology context for this component
-    const relatedTopology = topologyService.getRelatedComponents(pred.componentId);
-    const relatedSummary = relatedTopology.map(
-      (r) => `${r.relationship} ${r.node.componentName} (${r.node.componentId})`
-    );
+    const priorityDecision = resolveEffectivePriority(pred.priority || 'Medium', pred.componentId);
 
     logAutomationEvent('FAULT_DETECTED', `${pred.healthStatus} detected on ${pred.componentName}`, {
       assetId: pred.assetId,
       componentId: pred.componentId,
       metadata: {
         healthStatus: pred.healthStatus,
-        topologyRelationships: relatedSummary,
+        priority: priorityDecision.effectivePriority,
       },
     });
 
@@ -148,18 +148,8 @@ export class AutomationEngine {
       componentName: pred.componentName,
       predictionId: pred.predictionId,
       faultType: pred.healthStatus,
-      priority: pred.priority || 'Medium',
+      priority: priorityDecision.effectivePriority,
     });
-
-    if (relatedSummary.length > 0) {
-      ticket.timeline.push({
-        id: uuidv4(),
-        timestamp: new Date().toISOString(),
-        type: 'TOPOLOGY_CONTEXT_EVALUATED',
-        message: `Topology structural context: ${relatedSummary.join(', ')}`,
-      });
-      updateTicket(ticket);
-    }
 
     const procedure = findProcedureForComponent(pred.componentType);
     if (!procedure) {

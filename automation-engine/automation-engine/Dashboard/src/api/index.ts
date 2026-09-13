@@ -51,6 +51,21 @@ export const api = {
   getFaultyComponents: () => apiFetch<ComponentItem[]>('/components/faulty'),
 
   getTickets: () => apiFetch<TicketItem[]>('/tickets'),
+  getMaintenanceQueue: () =>
+    apiFetch<{
+      version: string;
+      generatedAt: string;
+      queue: Array<{
+        componentId: string;
+        componentName: string;
+        mlPriority: TicketItem['priority'];
+        effectivePriority: TicketItem['priority'];
+        operationalCriticality: number;
+        compositeScore: number;
+        maintenanceOrder: number;
+        rationale: string;
+      }>;
+    }>('/maintenance/queue'),
   getTicket: (id: string) => apiFetch<TicketItem>(`/tickets/${id}`),
   createTicket: (payload: CreateTicketPayload) =>
     apiFetch<TicketItem>('/tickets', { method: 'POST', body: JSON.stringify(payload) }),

@@ -93,6 +93,11 @@ export class TopologyService {
     );
   }
 
+  public getNodeByCadObject(cadObjectName: string): TopologyNode | undefined {
+    if (!cadObjectName) return undefined;
+    return this.getTopology().nodes.find((n) => n.cadObjects.includes(cadObjectName));
+  }
+
   public getOutboundEdges(componentId: string): TopologyEdge[] {
     const node = this.getNode(componentId);
     if (!node) return [];

@@ -143,11 +143,25 @@ export class GeneratorInteractionManager {
     return this.cachedIntersection;
   }
 
+  setPointerFromClient(clientX, clientY) {
+    const rect = this.domElement.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return false;
+    this.pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    this.pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    this.rawPointerX = clientX;
+    this.rawPointerY = clientY;
+    this.pointerActive = true;
+    return true;
+  }
+
   onClick(event) {
+    this.setPointerFromClient(event.clientX, event.clientY);
     const intersection = this.getIntersection(true);
 
     if (!intersection) {
-      this.clearSelection();
+      if (!this.selectedRoot) {
+        this.clearSelection();
+      }
       return;
     }
 
