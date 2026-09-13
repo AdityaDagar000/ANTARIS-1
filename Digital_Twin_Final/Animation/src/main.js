@@ -10,7 +10,6 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { GeneratorInteractionManager } from './generatorInteraction.js';
-import { RED_ANOMALY_MATERIAL } from './materials.js';
 import 'animejs/adapters/three';
 import { engine } from 'animejs';
 
@@ -223,17 +222,8 @@ if (debugBtn) {
   debugBtn.addEventListener('click', toggleDebugMode);
 }
 
-// Component Status Button (Top-Right Anomaly Isolation Toggle)
-const componentStatusBtn = document.getElementById('component-status-btn');
-if (componentStatusBtn) {
-  componentStatusBtn.addEventListener('click', () => {
-    generatorInteractionManager?.componentManager?.toggleAnomalyView();
-  });
-}
-
 window.addEventListener('keydown', (e) => {
   if (e.key === '~' || e.key === '`') toggleDebugMode();
-  if (e.key === '!' || e.key === '1') generatorInteractionManager?.componentManager?.toggleAnomalyView();
   if (e.key === 'ArrowDown') setAssetCursor(assetCursor + 1);
   if (e.key === 'ArrowUp') setAssetCursor(assetCursor - 1);
   if (e.key === 'Enter' && assetCursor >= 0) assetButtons[assetCursor]?.click();
@@ -272,8 +262,6 @@ window.addEventListener('digital-twin-selection', (event) => {
   if (!component || !locked) {
     if (chip) chip.classList.remove('is-locked');
     if (chipText) chipText.textContent = 'BHARTI RESEARCH STATION · DIGITAL TWIN READY';
-    assetButtons.forEach(b => b.classList.remove('is-controller-active'));
-    assetCursor = -1;
 
     // Smoothly restore home camera position
     if (homeCameraState) {
@@ -293,19 +281,6 @@ window.addEventListener('digital-twin-selection', (event) => {
   const title = metadata?.displayName || component.name;
   if (chip) chip.classList.add('is-locked');
   if (chipText) chipText.textContent = `${title.toUpperCase()} / INSPECTION LOCKED`;
-
-  // Sync sidebar active button
-  const targetAssetName = metadata?.monitoredName || metadata?.name || component.name;
-  if (targetAssetName) {
-    const matchedIdx = assetButtons.findIndex(b => b.dataset.asset === targetAssetName);
-    if (matchedIdx >= 0) {
-      assetCursor = matchedIdx;
-      assetButtons.forEach((b, i) => b.classList.toggle('is-controller-active', i === assetCursor));
-      const group = assetButtons[matchedIdx].closest('details');
-      if (group) group.open = true;
-      assetButtons[matchedIdx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }
-  }
 
   _tempBox.setFromObject(component);
   const target = _tempBox.getCenter(_tempVecA).clone();
@@ -356,7 +331,6 @@ function updateGamepad(delta) {
   if (!gamepad) {
     if (controllerConnected) {
       controllerConnected = false;
-      generatorInteractionManager?.setControllerActive(false);
       if (controllerHint) {
         controllerHint.textContent = 'CONTROLLER: connect to begin';
         controllerHint.classList.remove('is-active');
@@ -367,7 +341,6 @@ function updateGamepad(delta) {
 
   if (!controllerConnected) {
     controllerConnected = true;
-    generatorInteractionManager?.setControllerActive(true);
     if (controllerHint) {
       const padId = gamepad.id || 'GAMEPAD';
       const cleanName = padId.includes('Xbox') ? 'XBOX' : (padId.includes('PlayStation') || padId.includes('Dual') ? 'PS' : 'CONTROLLER');
@@ -449,12 +422,8 @@ function updateGamepad(delta) {
   const btnB = gamepad.buttons[1]?.pressed || gamepad.buttons[9]?.pressed; // Start / Menu also resets
   if ((btnA || btnB) && !controllerActionLatch) {
     if (btnA) {
-      if (generatorInteractionManager?.hoveredMesh) {
-        generatorInteractionManager.selectMesh(generatorInteractionManager.hoveredMesh);
-      } else if (assetCursor >= 0 && assetButtons[assetCursor]) {
+      if (assetCursor >= 0 && assetButtons[assetCursor]) {
         assetButtons[assetCursor].click();
-      } else if (generatorInteractionManager) {
-        generatorInteractionManager.selectCenterTarget();
       }
     } else {
       generatorInteractionManager?.clearSelection();
@@ -596,11 +565,6 @@ function animate() {
     } catch (err) {
       console.warn('Interaction update error:', err);
     }
-  }
-
-  // Animate Red Gradient Anomaly Pulse
-  if (RED_ANOMALY_MATERIAL) {
-    RED_ANOMALY_MATERIAL.emissiveIntensity = 0.75 + Math.sin(clock.getElapsedTime() * 3.5) * 0.35;
   }
 
   controls.update();

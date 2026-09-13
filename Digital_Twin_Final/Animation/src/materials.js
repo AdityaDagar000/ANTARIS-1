@@ -1,6 +1,7 @@
 /**
  * Bharti Research Station - Cinematic Industrial Engineering Material System
- * Restrained metallic PBR palette, isolated hover highlights, and preserved 3D metallic models on selection.
+ * Restrained metallic PBR palette, dedicated highlight/selection/blueprint materials,
+ * and zero cross-component highlight contamination.
  */
 
 import * as THREE from 'three';
@@ -10,40 +11,40 @@ export const CINEMATIC_MATERIALS = {
   // Heavy structural frames, generator blocks, main engine castings
   gunmetal: new THREE.MeshStandardMaterial({
     name: 'Cinematic_Gunmetal',
-    color: new THREE.Color(0x28323c),
+    color: new THREE.Color(0x232c35),
     metalness: 0.92,
-    roughness: 0.30,
-    envMapIntensity: 1.5,
+    roughness: 0.32,
+    envMapIntensity: 1.45,
     side: THREE.DoubleSide
   }),
 
   // Precision mechanical components, shafts, rotating couplings, pump impellers
   brushedSteel: new THREE.MeshStandardMaterial({
     name: 'Cinematic_BrushedSteel',
-    color: new THREE.Color(0x6a7784),
+    color: new THREE.Color(0x626f7c),
     metalness: 0.95,
-    roughness: 0.32,
-    envMapIntensity: 1.65,
+    roughness: 0.34,
+    envMapIntensity: 1.6,
     side: THREE.DoubleSide
   }),
 
   // Antenna elevation/azimuth mechanisms, harmonic drives, high-spec fittings
   darkTitanium: new THREE.MeshStandardMaterial({
     name: 'Cinematic_DarkTitanium',
-    color: new THREE.Color(0x38414b),
+    color: new THREE.Color(0x353e48),
     metalness: 0.94,
-    roughness: 0.25,
-    envMapIntensity: 1.7,
+    roughness: 0.26,
+    envMapIntensity: 1.65,
     side: THREE.DoubleSide
   }),
 
   // Electrical enclosures, heat sink fins, conduit brackets, structural supports
   aluminum: new THREE.MeshStandardMaterial({
     name: 'Cinematic_Aluminum',
-    color: new THREE.Color(0x7c8c9b),
+    color: new THREE.Color(0x768594),
     metalness: 0.88,
-    roughness: 0.35,
-    envMapIntensity: 1.4,
+    roughness: 0.36,
+    envMapIntensity: 1.35,
     side: THREE.DoubleSide
   }),
 
@@ -134,29 +135,39 @@ export const CINEMATIC_MATERIALS = {
   })
 };
 
-// 2. Subtle Isolated Hover Material (subtle metallic sheen, not loud or blue)
+// 2. Dedicated Interaction Materials (Isolated instances: NEVER shared across unselected objects)
 export const HOVER_MATERIAL = new THREE.MeshStandardMaterial({
   name: 'Cinematic_Isolated_Hover',
-  color: new THREE.Color(0x355b7d),
-  emissive: new THREE.Color(0x0ea5e9),
-  emissiveIntensity: 0.38,
-  metalness: 0.94,
-  roughness: 0.22,
-  envMapIntensity: 1.9,
+  color: new THREE.Color(0x2a5477),
+  emissive: new THREE.Color(0x00c8e6),
+  emissiveIntensity: 0.52,
+  metalness: 0.90,
+  roughness: 0.25,
+  envMapIntensity: 1.8,
   side: THREE.DoubleSide
 });
 
-// 3. 2D Blueprint Theme for Unselected Background Equipment
+export const SELECTION_MATERIAL = new THREE.MeshStandardMaterial({
+  name: 'Cinematic_Isolated_Selected',
+  color: new THREE.Color(0x386d99),
+  emissive: new THREE.Color(0x00f0ff),
+  emissiveIntensity: 0.85,
+  metalness: 0.95,
+  roughness: 0.20,
+  envMapIntensity: 2.2,
+  side: THREE.DoubleSide
+});
+
 export const BLUEPRINT_MATERIAL = new THREE.MeshStandardMaterial({
   name: 'Cinematic_2D_Blueprint_Theme',
   color: new THREE.Color(0x08263f),
   emissive: new THREE.Color(0x04192b),
-  emissiveIntensity: 0.35,
+  emissiveIntensity: 0.40,
   metalness: 0.15,
   roughness: 0.75,
   transparent: true,
-  opacity: 0.20,
-  depthWrite: false, // Prevents z-fighting across translucent meshes
+  opacity: 0.22,
+  depthWrite: false, // Prevents transparent sorting artifacts / z-fighting
   side: THREE.DoubleSide
 });
 
@@ -169,14 +180,14 @@ export function applyCinematicMaterials(model) {
 
     const name = child.name || '';
 
-    // Room Enclosure Shells
+    // 1. Room Enclosure Shells
     if (name === 'CHP' || name === 'CHP (1)' || name === 'Body210') {
       child.material = CINEMATIC_MATERIALS.facilityFloor;
       child.userData.baseMaterial = CINEMATIC_MATERIALS.facilityFloor;
       return;
     }
 
-    // Piping Networks
+    // 2. Piping Networks
     if (/BluePipe/i.test(name)) {
       child.material = CINEMATIC_MATERIALS.pipesCoolingBlue;
       child.userData.baseMaterial = CINEMATIC_MATERIALS.pipesCoolingBlue;
@@ -193,7 +204,7 @@ export function applyCinematicMaterials(model) {
       return;
     }
 
-    // Antenna & Drives
+    // 3. Antenna Aperture & Drives
     if (name === 'GeoSphere02') {
       child.material = CINEMATIC_MATERIALS.dishReflector;
       child.userData.baseMaterial = CINEMATIC_MATERIALS.dishReflector;
@@ -205,7 +216,7 @@ export function applyCinematicMaterials(model) {
       return;
     }
 
-    // Machinery & Generators
+    // 4. Machinery & Generators
     if (/EngineCore|Alternator|GeneratorSystem/i.test(name)) {
       child.material = CINEMATIC_MATERIALS.gunmetal;
       child.userData.baseMaterial = CINEMATIC_MATERIALS.gunmetal;
@@ -227,7 +238,7 @@ export function applyCinematicMaterials(model) {
       return;
     }
 
-    // Unnamed CAD Bodies
+    // 5. Unnamed CAD Bodies & General Hardware
     if (/^Body\d+/i.test(name)) {
       const id = parseInt(name.replace(/\D/g, '') || '0', 10);
       const palette = [
@@ -242,13 +253,14 @@ export function applyCinematicMaterials(model) {
       return;
     }
 
+    // Default fallback to gunmetal
     child.material = CINEMATIC_MATERIALS.gunmetal;
     child.userData.baseMaterial = CINEMATIC_MATERIALS.gunmetal;
   });
 }
 
 /**
- * Applies subtle hover highlight to a mesh without mutating shared materials.
+ * Applies a strictly isolated hover highlight to a mesh without mutating any shared materials.
  */
 export function setMeshHoverState(mesh, isHovered, isBlueprintActive = false) {
   if (!mesh) return;
@@ -258,122 +270,21 @@ export function setMeshHoverState(mesh, isHovered, isBlueprintActive = false) {
     mesh.renderOrder = 5;
   } else {
     mesh.material = isBlueprintActive ? BLUEPRINT_MATERIAL : (mesh.userData.baseMaterial || CINEMATIC_MATERIALS.gunmetal);
-    mesh.renderOrder = 0;
+    mesh.renderOrder = isBlueprintActive ? 0 : 0;
   }
-}
-
-export const SELECTION_MATERIAL = new THREE.MeshStandardMaterial({
-  name: 'Cinematic_Selection_Highlight',
-  color: new THREE.Color(0x38bdf8),
-  emissive: new THREE.Color(0x0284c7),
-  emissiveIntensity: 0.5,
-  metalness: 0.9,
-  roughness: 0.25,
-  side: THREE.DoubleSide
-});
-
-function createRedGradientTexture() {
-  if (typeof document === 'undefined') return null;
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 256;
-  const ctx = canvas.getContext('2d');
-
-  // Vertical linear gradient from glowing bright crimson to deep dark maroon
-  const gradient = ctx.createLinearGradient(0, 0, 0, 256);
-  gradient.addColorStop(0, '#ff4d4d'); // Bright warning red/coral at top
-  gradient.addColorStop(0.35, '#ef4444'); // Vivid crimson
-  gradient.addColorStop(0.7, '#b91c1c'); // Deep red
-  gradient.addColorStop(1, '#450a0a'); // Dark industrial maroon at base
-
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 256, 256);
-
-  // High-tech horizontal raster scanlines
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
-  for (let y = 0; y < 256; y += 4) {
-    ctx.fillRect(0, y, 256, 1);
-  }
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  return texture;
-}
-
-export const RED_ANOMALY_MATERIAL = new THREE.MeshStandardMaterial({
-  name: 'Cinematic_Red_Gradient_Anomaly',
-  map: createRedGradientTexture(),
-  color: new THREE.Color(0xffffff),
-  emissive: new THREE.Color(0xdc2626),
-  emissiveIntensity: 0.85,
-  metalness: 0.82,
-  roughness: 0.28,
-  envMapIntensity: 1.8,
-  side: THREE.DoubleSide
-});
-
-export const YELLOW_STATUS_MATERIAL = new THREE.MeshStandardMaterial({
-  name: 'Cinematic_Yellow_Degrading',
-  color: new THREE.Color(0xfacc15),
-  emissive: new THREE.Color(0xca8a04),
-  emissiveIntensity: 0.65,
-  metalness: 0.82,
-  roughness: 0.28,
-  envMapIntensity: 1.8,
-  side: THREE.DoubleSide
-});
-
-export const GREEN_STATUS_MATERIAL = new THREE.MeshStandardMaterial({
-  name: 'Cinematic_Green_Normal',
-  color: new THREE.Color(0x10b981),
-  emissive: new THREE.Color(0x059669),
-  emissiveIntensity: 0.55,
-  metalness: 0.82,
-  roughness: 0.28,
-  envMapIntensity: 1.8,
-  side: THREE.DoubleSide
-});
-
-/**
- * Resolves status material strictly according to state:
- * - Early degrading and normal -> GREEN
- * - Degradation -> YELLOW
- * - Critical and failure -> RED (Red gradient)
- */
-export function getStatusMaterialForState(stateKey) {
-  if (!stateKey) return GREEN_STATUS_MATERIAL;
-  const s = String(stateKey).toUpperCase().replace(/[-\s]/g, '_');
-  if (s.includes('FAIL') || s.includes('CRITICAL')) {
-    return RED_ANOMALY_MATERIAL;
-  }
-  if (s.includes('EARLY')) {
-    return GREEN_STATUS_MATERIAL;
-  }
-  if (s.includes('DEGRAD')) {
-    return YELLOW_STATUS_MATERIAL;
-  }
-  return GREEN_STATUS_MATERIAL;
-}
-
-export function getSelectionMaterial(stateKey = 'NORMAL', baseMaterial = null) {
-  // Respect user request: keep actual 3D metallic PBR model appearance!
-  return baseMaterial || CINEMATIC_MATERIALS.gunmetal;
 }
 
 /**
- * Applies selection state: keeps selected component in its ACTUAL 3D METALLIC MODEL
- * and sets unselected equipment to 2D blueprint context.
+ * Applies a strictly isolated selection highlight to a component mesh.
  */
 export function setMeshSelectionState(mesh, isSelected, isBlueprintActive = false) {
   if (!mesh) return;
 
   if (isSelected) {
-    // Retain actual 3D metallic PBR model appearance (expanded, NOT blue!)
-    mesh.material = mesh.userData.baseMaterial || CINEMATIC_MATERIALS.gunmetal;
+    mesh.material = SELECTION_MATERIAL;
     mesh.renderOrder = 10;
   } else {
     mesh.material = isBlueprintActive ? BLUEPRINT_MATERIAL : (mesh.userData.baseMaterial || CINEMATIC_MATERIALS.gunmetal);
-    mesh.renderOrder = 0;
+    mesh.renderOrder = isBlueprintActive ? 0 : 0;
   }
 }
